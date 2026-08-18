@@ -1,303 +1,225 @@
-# Data Formatting
+# Data Analysis and Visualization
 
-A collection of notes covering the fundamentals of data formatting and preprocessing using Pandas and NumPy. These techniques help prepare raw data for analysis and machine learning.
+A summary of key statistical analysis and visualization techniques used to explore relationships, distributions, and correlations in data.
 
----
+## Statistical Summary
 
-## Topics Covered
+Use Pandas `describe()` to quickly calculate important statistical measures for numerical variables.
 
-- Data Formatting
-- Unit Conversion
-- Data Types
-- Data Normalization
-- Feature Scaling
-- Min-Max Normalization
-- Z-Score Normalization
-- Binning
-- Histograms
-- One-Hot Encoding
-
----
-
-## Data Formatting
-
-Data formatting makes data from different sources consistent, clean, and ready for analysis.
-
-Examples include:
-
-- Converting units
-- Correcting data types
-- Handling inconsistent values
-
----
-
-## Unit Conversion
-
-Convert values from one unit to another.
-
-**Syntax**
+### Syntax
 
 ```python
-df["new_column"] = df["column"] * conversion_factor
+df.describe()
 ```
 
-**Example**
+Provides measures such as:
+
+- Mean
+- Standard deviation
+- Minimum
+- Quartiles
+- Maximum
+
+## Categorical Data
+
+Use `value_counts()` to summarize categorical data into different categories.
+
+### Syntax
 
 ```python
-# Convert city MPG to L/100km
-
-df["city-L/100km"] = 235 / df["city-mpg"]
+df["column"].value_counts()
 ```
 
----
-
-## Data Types
-
-Check and convert data types for accurate analysis.
-
-### Check Data Types
-
-**Syntax**
+### Example
 
 ```python
-df.dtypes
+df["fuel-type"].value_counts()
 ```
 
-**Example**
+## Box Plot
+
+A box plot provides a visual representation of the distribution of numerical data.
+
+It shows:
+
+- Median
+- Quartiles
+- Outliers
+
+### Syntax
 
 ```python
-print(df.dtypes)
-```
-
-### Convert Data Type
-
-**Syntax**
-
-```python
-df["column"] = df["column"].astype(data_type)
-```
-
-**Example**
-
-```python
-df["price"] = df["price"].astype(float)
-
-df["year"] = df["year"].astype(int)
-```
-
----
-
-## Data Normalization
-
-Normalization scales values so different variables become comparable.
-
-Common methods:
-
-- Feature Scaling
-- Min-Max Normalization
-- Z-Score Normalization
-
----
-
-## Feature Scaling
-
-Scales values between 0 and 1.
-
-**Syntax**
-
-```python
-df["column"] = df["column"] / df["column"].max()
-```
-
-**Example**
-
-```python
-df["length"] = df["length"] / df["length"].max()
-```
-
----
-
-## Min-Max Normalization
-
-Transforms values into a range between 0 and 1.
-
-**Syntax**
-
-```python
-df["column"] = (
-    df["column"] - df["column"].min()
-) / (
-    df["column"].max() - df["column"].min()
+sns.boxplot(
+    x="column",
+    y="column",
+    data=df
 )
 ```
 
-**Example**
+## Scatter Plot
+
+Scatter plots are useful for exploring relationships between continuous variables.
+
+For example:
+
+- Engine size
+- Price
+
+### Syntax
 
 ```python
-df["horsepower"] = (
-    df["horsepower"] - df["horsepower"].min()
-) / (
-    df["horsepower"].max() - df["horsepower"].min()
+plt.scatter(x, y)
+```
+
+### Example
+
+```python
+plt.scatter(
+    df["engine-size"],
+    df["price"]
 )
 ```
 
----
+## GroupBy
 
-## Z-Score Normalization
+Use Pandas `groupby()` to explore relationships between categorical variables.
 
-Centers data around a mean of 0 with a standard deviation of 1.
-
-**Syntax**
+### Syntax
 
 ```python
-df["column"] = (
-    df["column"] - df["column"].mean()
-) / df["column"].std()
+df.groupby("column")
 ```
 
-**Example**
+### Example
 
 ```python
-df["price"] = (
-    df["price"] - df["price"].mean()
-) / df["price"].std()
+df.groupby("fuel-type").mean()
 ```
 
----
+## Pivot Tables
 
-## Binning
+Pivot tables can be used to summarize relationships between variables and support data visualization.
 
-Groups continuous numerical values into intervals (bins).
-
-Useful for:
-
-- Improving model accuracy
-- Simplifying visualization
-- Grouping continuous data
-
----
-
-### Create Bins
-
-**Syntax**
+### Syntax
 
 ```python
-bins = np.linspace(start, stop, number_of_bins)
-```
-
-**Example**
-
-```python
-import numpy as np
-
-bins = np.linspace(
-    df["price"].min(),
-    df["price"].max(),
-    4
+df.pivot_table(
+    values="value",
+    index="row",
+    columns="column"
 )
 ```
 
----
+## Heatmaps
 
-### Assign Values to Bins
+Heatmaps provide a visual summary of relationships and correlation values between multiple variables.
 
-**Syntax**
+### Syntax
 
 ```python
-pd.cut(column, bins, labels=labels)
+sns.heatmap(data)
 ```
 
-**Example**
+## Correlation
+
+Correlation is a statistical measure that indicates how changes in one variable may be associated with changes in another variable.
+
+Correlation can be explored using:
+
+- Scatter plots
+- Regression lines
+- Pearson correlation
+- Heatmaps
+
+## Regression Plot
+
+A scatter plot combined with a regression line can be used to visualize relationships between continuous variables.
+
+Seaborn's `regplot()` is useful for exploring correlation.
+
+### Syntax
 
 ```python
-labels = ["Low", "Medium", "High"]
-
-df["price-binned"] = pd.cut(
-    df["price"],
-    bins,
-    labels=labels
+sns.regplot(
+    x="column1",
+    y="column2",
+    data=df
 )
 ```
 
----
-
-## Histogram
-
-Visualize the distribution of binned data.
-
-**Syntax**
+### Example
 
 ```python
-plt.hist(column)
-```
-
-**Example**
-
-```python
-import matplotlib.pyplot as plt
-
-plt.hist(df["price"])
-plt.show()
-```
-
----
-
-## One-Hot Encoding
-
-Converts categorical variables into numerical variables.
-
-Useful for machine learning models.
-
-**Syntax**
-
-```python
-pd.get_dummies(df["column"])
-```
-
-**Example**
-
-```python
-fuel = pd.get_dummies(df["fuel-type"])
-
-df = pd.concat([df, fuel], axis=1)
-
-df.drop("fuel-type", axis=1, inplace=True)
-```
-
----
-
-## Common Workflow
-
-```python
-import pandas as pd
-import numpy as np
-
-# Check data types
-df.dtypes
-
-# Convert data type
-df["price"] = df["price"].astype(float)
-
-# Normalize data
-df["length"] = df["length"] / df["length"].max()
-
-# Create bins
-bins = np.linspace(
-    df["price"].min(),
-    df["price"].max(),
-    4
+sns.regplot(
+    x="engine-size",
+    y="price",
+    data=df
 )
-
-labels = ["Low", "Medium", "High"]
-
-df["price-binned"] = pd.cut(
-    df["price"],
-    bins,
-    labels=labels
-)
-
-# One-hot encoding
-fuel = pd.get_dummies(df["fuel-type"])
-
-df = pd.concat([df, fuel], axis=1)
 ```
+
+## Pearson Correlation
+
+Pearson correlation is used to assess the correlation between continuous numerical variables.
+
+It provides two important values:
+
+- **Correlation coefficient** — indicates the strength and direction of the relationship.
+- **P-value** — indicates the certainty of the correlation.
+
+### Correlation Coefficient
+
+A coefficient close to:
+
+```text
++1  → Strong positive correlation
+-1  → Strong negative correlation
+ 0  → Little or no correlation
+```
+
+## P-value
+
+P-values help assess the certainty of the correlation.
+
+```text
+P-value < 0.001
+```
+
+indicates strong certainty in the correlation.
+
+Larger P-values indicate less certainty.
+
+Both the correlation coefficient and P-value are important when evaluating correlation.
+
+## Heatmap for Correlation
+
+A heatmap provides a comprehensive visual summary of the strength and direction of correlations among multiple variables.
+
+### Syntax
+
+```python
+sns.heatmap(
+    df.corr()
+)
+```
+
+## Analysis Workflow
+
+```text
+Statistical Summary
+        ↓
+Categorical Analysis
+        ↓
+Distribution Analysis
+        ↓
+Scatter Plots
+        ↓
+GroupBy / Pivot Tables
+        ↓
+Correlation Analysis
+        ↓
+Regression Plot
+        ↓
+Heatmap
+```
+
+Created by Guruvendra
