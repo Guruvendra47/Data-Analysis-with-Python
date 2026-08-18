@@ -1,187 +1,339 @@
 # Data Cleaning in Pandas
 
-Step-by-step procedure for cleaning data in Pandas.
+Step-by-step procedure for cleaning and preparing a dataset using Pandas.
 
-## 1. Download the Dataset
-
-Use `requests` to download the dataset.
+## 1. Import the Libraries
 
 ```python
+import pandas as pd
+import numpy as np
+import matplotlib.pylab as plt
 import requests
+```
 
+## 2. Download and Load the Dataset
+
+Download the dataset and load it into a Pandas DataFrame.
+
+```python
 def download(url, filename):
     response = requests.get(url)
     if response.status_code == 200:
         with open(filename, "wb") as f:
             f.write(response.content)
 
-# Usage
-download(file_path, "laptops.csv")
+download(file_path, "usedcars.csv")
 ```
 
-## 2. Check for Missing Values
-
-### Method 1: Using `sum()`
-
 ```python
-df["Name"].isnull().sum()
+df = pd.read_csv("usedcars.csv", names=headers)
 ```
 
-### Method 2: Check Missing Values in Each Column
+## 3. Inspect the Dataset
+
+Check the first few rows and understand the structure of the data.
 
 ```python
-k = df.isnull()
+df.head()
+df.dtypes
+```
 
-for i in k.columns.values.tolist():
-    print(i)
-    print(k[i].value_counts())
+## 4. Identify Missing Values
+
+Convert `?` values to `NaN`, then check for missing data.
+
+```python
+df.replace("?", np.nan, inplace=True)
+```
+
+```python
+missing_data = df.isnull()
+```
+
+Count missing values:
+
+```python
+df.isnull().sum()
+```
+
+Or check each column:
+
+```python
+for column in missing_data.columns.values.tolist():
+    print(column)
+    print(missing_data[column].value_counts())
     print("")
 ```
 
-## 3. Deal With Missing Data
+## 5. Handle Missing Values
 
-There are two main approaches.
+Choose the appropriate method based on the column.
 
-### Drop Data
+### Replace Numerical Values
 
-- Drop the whole row
-- Drop the whole column
+Use the mean for numerical columns such as `normalized-losses`, `bore`, `stroke`, `horsepower`, and `peak-rpm`.
 
-### Replace Data
+```python
+average = df["column"].astype("float").mean(axis=0)
 
-- Replace with the mean
-- Replace with the frequency
-- Replace based on other functions
+df["column"].replace(
+    np.nan,
+    average,
+    inplace=True
+)
+```
 
-## 4. Correct Data Format
+### Replace Categorical Values
 
-The last step in data cleaning is checking and making sure that all data is in the correct format.
+Use the most frequent value for categorical data.
 
-Examples:
+```python
+df["num-of-doors"].value_counts().idxmax()
+```
 
-- Integer
-- Float
-- Text
-- Other appropriate formats
+```python
+df["num-of-doors"].replace(
+    np.nan,
+    "four",
+    inplace=True
+)
+```
 
-### Check Data Types
+### Drop Rows
+
+If an important value such as `price` is missing, remove the row.
+
+```python
+df.dropna(
+    subset=["price"],
+    axis=0,
+    inplace=True
+)
+
+df.reset_index(
+    drop=True,
+    inplace=True
+)
+```
+
+## 6. Correct Data Types
+
+Check the data types:
 
 ```python
 df.dtypes
 ```
 
-### Change Data Types
+Convert columns to the correct format using `astype()` or `pd.to_numeric()`.
 
 ```python
-df["column"] = df["column"].astype("int")
+df[["bore", "stroke"]] = df[
+    ["bore", "stroke"]
+].astype("float")
 ```
 
-### Convert Multiple Columns Using `pd.to_numeric()`
+For multiple columns:
 
 ```python
-cols = ["bore", "stroke", "normalized-losses", "price", "peak-rpm"]
+cols = [
+    "bore",
+    "stroke",
+    "normalized-losses",
+    "price",
+    "peak-rpm"
+]
 
-df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
+df[cols] = df[cols].apply(
+    pd.to_numeric,
+    errors="coerce"
+)
 ```
 
-`errors="coerce"` converts values that cannot be converted into `NaN`.
+Check the result:
 
-## 5. Data Standardization
+```python
+df.dtypes
+```
 
-Data is usually collected from different agencies in different formats.
+## 7. Standardize Data
 
-Data standardization is the process of transforming data into a common format, allowing meaningful comparisons.
+Convert values into a common format when necessary.
 
-### Example: Convert MPG to L/100km
-
-The fuel consumption columns `city-mpg` and `highway-mpg` are represented using MPG.
-
-Formula:
+For example, convert MPG to L/100km.
 
 ```text
 L/100km = 235 / mpg
 ```
 
-Using Pandas:
-
 ```python
-df["city-mpg"] = 235 / df["city-mpg"]
-df["highway-mpg"] = 235 / df["highway-mpg"]
+df["city-L/100km"] = (
+    235 / df["city-mpg"]
+)
+
+df["highway-mpg"] = (
+    235 / df["highway-mpg"]
+)
 ```
 
-## 6. Data Normalization
+Rename the converted column:
 
-Normalization is the process of transforming values of several variables into a similar range.
+```python
+df.rename(
+    columns={
+        "highway-mpg": "highway-L/100km"
+    },
+    inplace=True
+)
+```
 
-Typical normalization approaches include:
+## 8. Normalize Data
 
-- Scaling the variable so the average is 0
-- Scaling the variable so the variance is 1
-- Scaling the variable so the values range from 0 to 1
+Normalize numerical variables to a similar range.
 
-### Example
-
-Normalize the columns:
-
-- `length`
-- `width`
-- `height`
-
-Target: Normalize the variables so their values range from 0 to 1.
-
-Formula:
+For values between 0 and 1:
 
 ```text
 normalized value = original value / maximum value
 ```
 
-Using Pandas:
-
 ```python
-df["length"] = df["length"] / df["length"].max()
-df["width"] = df["width"] / df["width"].max()
-df["height"] = df["height"] / df["height"].max()
-```
+df["length"] = (
+    df["length"] / df["length"].max()
+)
 
-## 7. Binning
+df["width"] = (
+    df["width"] / df["width"].max()
+)
 
-Binning is the process of transforming continuous numerical variables into discrete categorical bins for grouped analysis.
-
-### Example
-
-The `horsepower` column contains values ranging from 48 to 288 with many unique values.
-
-If you only care about:
-
-- Low horsepower
-- Medium horsepower
-- High horsepower
-
-You can divide the values into three bins.
-
-### Using `pd.cut()`
-
-```python
-bins = [48, 120, 200, 288]
-labels = ["Low", "Medium", "High"]
-
-df["horsepower-binned"] = pd.cut(
-    df["horsepower"],
-    bins=bins,
-    labels=labels
+df["height"] = (
+    df["height"] / df["height"].max()
 )
 ```
 
-## Final Result
+## 9. Create Bins
 
-After completing the data cleaning steps, the goal is to obtain a cleansed dataset with:
+Convert continuous numerical values into categories.
 
-- No missing values
-- Correct data formats
-- Standardized values
-- Normalized variables where required
-- Binned numerical variables where required
+For example, divide `horsepower` into:
 
----
+- Low
+- Medium
+- High
+
+Create the bin boundaries:
+
+```python
+bins = np.linspace(
+    min(df["horsepower"]),
+    max(df["horsepower"]),
+    4
+)
+```
+
+Define the categories:
+
+```python
+group_names = [
+    "Low",
+    "Medium",
+    "High"
+]
+```
+
+Apply the bins:
+
+```python
+df["horsepower-binned"] = pd.cut(
+    df["horsepower"],
+    bins,
+    labels=group_names,
+    include_lowest=True
+)
+```
+
+Check the distribution:
+
+```python
+df["horsepower-binned"].value_counts()
+```
+
+## 10. Convert Categorical Data to Indicator Variables
+
+Convert categorical columns into numerical `0` and `1` values.
+
+```python
+dummy_variable = pd.get_dummies(
+    df["fuel-type"]
+)
+```
+
+Rename the columns:
+
+```python
+dummy_variable.rename(
+    columns={
+        "gas": "fuel-type-gas",
+        "diesel": "fuel-type-diesel"
+    },
+    inplace=True
+)
+```
+
+Merge them into the DataFrame:
+
+```python
+df = pd.concat(
+    [df, dummy_variable],
+    axis=1
+)
+```
+
+Drop the original categorical column:
+
+```python
+df.drop(
+    "fuel-type",
+    axis=1,
+    inplace=True
+)
+```
+
+The same process can be applied to other categorical columns such as `aspiration`.
+
+## 11. Save the Cleaned Dataset
+
+Save the final cleaned DataFrame.
+
+```python
+df.to_csv(
+    "clean_df.csv"
+)
+```
+
+## Data Cleaning Workflow
+
+```text
+Download Dataset
+      ↓
+Load Dataset
+      ↓
+Inspect Data
+      ↓
+Identify Missing Values
+      ↓
+Handle Missing Values
+      ↓
+Correct Data Types
+      ↓
+Standardize Data
+      ↓
+Normalize Data
+      ↓
+Create Bins
+      ↓
+Create Indicator Variables
+      ↓
+Save Clean Dataset
+```
 
 Created by Guruvendra
