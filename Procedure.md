@@ -2,8 +2,6 @@
 
 Step-by-step procedure for cleaning data in Pandas.
 
-Created by Guruvendra
-
 ## 1. Download the Dataset
 
 Use `requests` to download the dataset.
@@ -68,23 +66,17 @@ Examples:
 
 ### Check Data Types
 
-Use `.dtypes` to check the data type of each column.
-
 ```python
 df.dtypes
 ```
 
 ### Change Data Types
 
-Use `.astype()` to change the data type.
-
 ```python
 df["column"] = df["column"].astype("int")
 ```
 
 ### Convert Multiple Columns Using `pd.to_numeric()`
-
-List the columns you want to convert.
 
 ```python
 cols = ["bore", "stroke", "normalized-losses", "price", "peak-rpm"]
@@ -189,3 +181,7 @@ After completing the data cleaning steps, the goal is to obtain a cleansed datas
 - Standardized values
 - Normalized variables where required
 - Binned numerical variables where required
+
+---
+
+Created by Guruvendra
